@@ -36,7 +36,7 @@ class StocksEnv(TradingEnv):
             trade = True
 
         if trade:
-            current_price = self.prices[self._current_tick]
+            current_price = self.prices[self._current_tick-1]
             last_trade_price = self.prices[self._last_trade_tick]
             price_diff = current_price - last_trade_price
 
@@ -53,7 +53,7 @@ class StocksEnv(TradingEnv):
             trade = True
 
         if trade or self._done:
-            current_price = self.prices[self._current_tick]
+            current_price = self.prices[self._current_tick-1]
             last_trade_price = self.prices[self._last_trade_tick]
 
             if self._position == Positions.Long:

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 class Actions(Enum):
     Sell = 0
     Buy = 1
+    Hold = 2
 
 
 class Positions(Enum):
@@ -143,6 +144,7 @@ class TradingEnv(gym.Env):
 
     def render_all(self, mode='human'):
         window_ticks = np.arange(len(self._position_history))
+        window_ticks-=1
         plt.plot(self.prices)
 
         short_ticks = []
