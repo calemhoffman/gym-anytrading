@@ -13,11 +13,12 @@ class Actions(Enum):
 
 
 class Positions(Enum):
-    Short = 0
-    Long = 1
+    Low = 10
+    Middle = 50
+    High = 100
 
-    def opposite(self):
-        return Positions.Short if self == Positions.Long else Positions.Long
+    #def opposite(self):
+    #    return Positions.Short if self == Positions.Long else Positions.Long
 
 
 class TradingEnv(gym.Env):
@@ -60,7 +61,7 @@ class TradingEnv(gym.Env):
         self._done = False
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
-        self._position = Positions.Short
+        self._position = Positions.Low
         self._position_history = (self.window_size * [None]) + [self._position]
         self._total_reward = 0.
         self._total_profit = 1.  # unit
@@ -82,12 +83,12 @@ class TradingEnv(gym.Env):
         self._update_profit(action)
 
         trade = False
-        if ((action == Actions.Buy.value and self._position == Positions.Short) or
-            (action == Actions.Sell.value and self._position == Positions.Long)):
+        if ((action == Actions.Buy.value and self._position == Positions.Low) or
+            (action == Actions.Sell.value and self._position == Positions.High)):
             trade = True
 
         if trade:
-            self._position = self._position.opposite()
+            #self._position = self._position.opposite()
             self._last_trade_tick = self._current_tick
 
         self._position_history.append(self._position)
@@ -118,10 +119,10 @@ class TradingEnv(gym.Env):
 
         def _plot_position(position, tick):
             color = None
-            if position == Positions.Short:
-                color = 'red'
-            elif position == Positions.Long:
-                color = 'green'
+            if position == Positions.Low:
+                color = 'yellow'
+            elif position == Positions.High:
+                color = 'blue'
             if color:
                 plt.scatter(tick, self.prices[tick], color=color)
 
@@ -150,9 +151,9 @@ class TradingEnv(gym.Env):
         short_ticks = []
         long_ticks = []
         for i, tick in enumerate(window_ticks):
-            if self._position_history[i] == Positions.Short:
+            if self._position_history[i] == Positions.Low:
                 short_ticks.append(tick)
-            elif self._position_history[i] == Positions.Long:
+            elif self._position_history[i] == Positions.High:
                 long_ticks.append(tick)
 
         plt.plot(short_ticks, self.prices[short_ticks], 'ro')
