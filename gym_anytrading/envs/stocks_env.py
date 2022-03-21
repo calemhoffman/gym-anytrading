@@ -29,21 +29,31 @@ class StocksEnv(TradingEnv):
 
     def _calculate_reward(self, action):
         stp_reward = 0
+        val_reward = 0 # dt in values in percent or totals
+        pkt_reward = 0 # dt in pocket in percent rel to starting?
         price_diff = 0
         trade = False
         #below should move position up down or stay same before calc dtreward
-        if ((action == Actions.Buy.value and self._position == Positions.Low) or
-            (action == Actions.Sell.value and self._position == Positions.High)):
+        if ((action == Actions.Buy.value and self._position == Positions.Low)):
             trade = True
+            self._position = Positions.High
+            self._pocket = self._pocket - 9. * self.prices[self._current_tick]
+
+        if ((action == Actions.Sell.value and self._position == Positions.High)):
+            trade = True
+            self._position = Positions.Low
+            #need to calculate how much made / lost since last .Low
+            #self._pocket = current_price - price at last buy
 
         #if trade:
         current_price = self.prices[self._current_tick]
         last_trade_price = self.prices[self._last_trade_tick]
         price_diff = current_price - last_trade_price
 
+        #my reward A * pocket + B * value, A & B to weight
+
         #if self._position == Positions.Long:
-        #below should be mult by positions!!
-        stp_reward = price_diff #*position number
+        stp_reward = price_diff*self._position.value #*position number
 
         return stp_reward
 

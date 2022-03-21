@@ -4,6 +4,8 @@ from gym.utils import seeding
 import numpy as np
 from enum import Enum
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 
 
 class Actions(Enum):
@@ -13,9 +15,9 @@ class Actions(Enum):
 
 
 class Positions(Enum):
-    Low = 10
-    Middle = 50
-    High = 100
+    Low = 1
+    Middle = 5
+    High = 10
 
     #def opposite(self):
     #    return Positions.Short if self == Positions.Long else Positions.Long
@@ -48,6 +50,7 @@ class TradingEnv(gym.Env):
         self._position_history = None
         self._total_reward = None
         self._total_profit = None
+        self._pocket = None
         self._first_rendering = None
         self.history = None
 
@@ -65,6 +68,7 @@ class TradingEnv(gym.Env):
         self._position_history = (self.window_size * [None]) + [self._position]
         self._total_reward = 0.
         self._total_profit = 1.  # unit
+        self._pocket = 10000. #starting 'cash' in pocket
         self._first_rendering = True
         self.history = {}
         return self._get_observation()
@@ -83,9 +87,13 @@ class TradingEnv(gym.Env):
         self._update_profit(action)
 
         trade = False
-        if ((action == Actions.Buy.value and self._position == Positions.Low) or
-            (action == Actions.Sell.value and self._position == Positions.High)):
+        if ((action == Actions.Buy.value and self._position == Positions.Low)):
             trade = True
+            #self._position = Positions.High
+
+        if ((action == Actions.Sell.value and self._position == Positions.High)):
+            trade = True
+            #self._position = Positions.Low
 
         if trade:
             #self._position = self._position.opposite()
@@ -143,7 +151,7 @@ class TradingEnv(gym.Env):
         plt.pause(0.01)
 
 
-    def render_all(self, mode='human'):
+    def render_all_old(self, mode='human'):
         window_ticks = np.arange(len(self._position_history))
         window_ticks-=0
         plt.plot(self.prices)
@@ -163,7 +171,14 @@ class TradingEnv(gym.Env):
             "Total Reward: %.6f" % self._total_reward + ' ~ ' +
             "Total Profit: %.6f" % self._total_profit
         )
-        
+    
+    def render_all(self, mode='human'):
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=self.df.index, y=self.df['Low']))
+        fig.add_trace(go.Scatter(x=self.df.index, y=self.df['High'],fill='tonexty'))
+        fig.add_trace(go.Scatter(x=self.df.index, y=self.df['Adj Close']))
+        fig.update_xaxes(title='Price')
+        fig.show()
         
     def close(self):
         plt.close()
