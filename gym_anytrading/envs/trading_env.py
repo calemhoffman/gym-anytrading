@@ -15,7 +15,7 @@ class Actions(Enum):
 
 
 class Positions(Enum):
-    Low = 1
+    Low = 0
     Middle = 5
     High = 10
 
@@ -49,7 +49,7 @@ class TradingEnv(gym.Env):
         self._position = None
         self._position_history = None
         self._total_reward = None
-        self._total_profit = None
+        self._total_value = None
         self._pocket = None
         self._first_rendering = None
         self.history = None
@@ -67,8 +67,8 @@ class TradingEnv(gym.Env):
         self._position = Positions.Low
         self._position_history = (self.window_size * [None]) + [self._position]
         self._total_reward = 0.
-        self._total_profit = 1.  # unit
-        self._pocket = 10000. #starting 'cash' in pocket
+        self._total_value = 0.  # unit
+        self._pocket = 100000. #starting 'cash' in pocket
         self._first_rendering = True
         self.history = {}
         return self._get_observation()
@@ -76,15 +76,19 @@ class TradingEnv(gym.Env):
 
     def step(self, action):
         self._done = False
+        # by increasing tick, it moves to next price right?
         self._current_tick += 1
 
         if self._current_tick == self._end_tick:
             self._done = True
 
+        # pull next obs. to see if action was good or bad ??
+        #already did this by updating _current_tick
+        #observation = self._get_observation()
         step_reward = self._calculate_reward(action)
         self._total_reward += step_reward
 
-        self._update_profit(action)
+        self._update_value(action)
 
         trade = False
         if ((action == Actions.Buy.value and self._position == Positions.Low)):
@@ -103,8 +107,9 @@ class TradingEnv(gym.Env):
         observation = self._get_observation()
         info = dict(
             total_reward = self._total_reward,
-            total_profit = self._total_profit,
-            position = self._position.value
+            total_value = self._total_value,
+            position = self._position.value,
+            action = action
         )
         self._update_history(info)
 
@@ -145,7 +150,7 @@ class TradingEnv(gym.Env):
 
         plt.suptitle(
             "Total Reward: %.6f" % self._total_reward + ' ~ ' +
-            "Total Profit: %.6f" % self._total_profit
+            "Total Value: %.6f" % self._total_value
         )
 
         plt.pause(0.01)
@@ -169,7 +174,7 @@ class TradingEnv(gym.Env):
 
         plt.suptitle(
             "Total Reward: %.6f" % self._total_reward + ' ~ ' +
-            "Total Profit: %.6f" % self._total_profit
+            "Total Value: %.6f" % self._total_value
         )
     
     def render_all(self, mode='human'):
@@ -200,9 +205,9 @@ class TradingEnv(gym.Env):
         raise NotImplementedError
 
 
-    def _update_profit(self, action):
+    def _update_value(self, action):
         raise NotImplementedError
 
 
-    def max_possible_profit(self):  # trade fees are ignored
+    def max_possible_value(self):  # trade fees are ignored
         raise NotImplementedError

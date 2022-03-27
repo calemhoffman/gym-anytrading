@@ -26,52 +26,66 @@ class StocksEnv(TradingEnv):
 
         return prices, signal_features
 
-
+    #calculate the delta reward based on current action
+    # and the next step
     def _calculate_reward(self, action):
-        stp_reward = 0
-        val_reward = 0 # dt in values in percent or totals
-        pkt_reward = 0 # dt in pocket in percent rel to starting?
-        price_diff = 0
+        stp_reward = 0.
+        price_diff = 0.
+        buy_cost =0.
+        price_diff_percent = 0.
         trade = False
+        current_price = self.prices[self._current_tick]
+        #last_trade_price = self.prices[self._last_trade_tick]
+        price_diff = current_price - self.prices[self._current_tick-1]
+        price_diff_percent = price_diff / (0.5*self.prices[self._current_tick] + 0.5*self.prices[self._current_tick-1]) * 100.
+        buy_cost = 9. * current_price
+        #print(buy_cost)
         #below should move position up down or stay same before calc dtreward
+        #also diff reward for different actions?
         if ((action == Actions.Buy.value and self._position == Positions.Low)):
             trade = True
             self._position = Positions.High
-            self._pocket = self._pocket - 9. * self.prices[self._current_tick]
+            self._pocket  -= buy_cost
+            if (price_diff >= 0.0):
+                stp_reward = 1.
 
         if ((action == Actions.Sell.value and self._position == Positions.High)):
             trade = True
             self._position = Positions.Low
+            self._pocket += buy_cost
+            if (price_diff <= 0.0):
+                stp_reward = 1.
             #need to calculate how much made / lost since last .Low
             #self._pocket = current_price - price at last buy
 
+        if ((action == Actions.Hold.value)):
+            trade = False
+            if (price_diff >= 0.0):
+                stp_reward = 0.5
+        
+        #print(self._pocket)
+        self._update_value(action)
+        #stp_reward = price_diff*self._position.value / self.prices[self._current_tick] * 100.#*position number
+
+        #need to calculate how much made / lost since last .Low
+        #self._pocket = current_price - price at last buy
         #if trade:
-        current_price = self.prices[self._current_tick]
-        last_trade_price = self.prices[self._last_trade_tick]
-        price_diff = current_price - last_trade_price
-
-        #my reward A * pocket + B * value, A & B to weight
-
-        #if self._position == Positions.Long:
-        stp_reward = price_diff*self._position.value #*position number
-
+        #should be done with averages into the future, or values,
+        #into the future for training
+        #should maybe add pocket value too?
+        #or percent from previous total value i think...
+        #actually should be reward for selling before a fall too,
+        #as in a 'saved_value' reward bonus...
+        #Call _update_value here first
+        #%
+        #       
         return stp_reward
 
-
-    def _update_profit(self, action):
-        trade = False
-        if ((action == Actions.Buy.value and self._position == Positions.Low) or
-            (action == Actions.Sell.value and self._position == Positions.High)):
-            trade = True
-
-        if trade or self._done:
-            current_price = self.prices[self._current_tick]
-            last_trade_price = self.prices[self._last_trade_tick]
-
-            #if self._position == Positions.Long:
-            #again should be mults by position
-            shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
-            self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
+    #update value
+    def _update_value(self, action):
+        #my value A * pocket + B * current_price * shares,
+        shares = self._position.value
+        self._total_value = self._pocket + shares * self.prices[self._current_tick]
 
 
     # def max_possible_profit(self):
