@@ -86,31 +86,3 @@ class StocksEnv(TradingEnv):
         #my value A * pocket + B * current_price * shares,
         shares = self._position.value
         self._total_value = self._pocket + shares * self.prices[self._current_tick]
-
-
-    # def max_possible_profit(self):
-    #     current_tick = self._start_tick
-    #     last_trade_tick = current_tick - 1
-    #     profit = 1.
-
-    #     while current_tick <= self._end_tick:
-    #         position = None
-    #         if self.prices[current_tick] < self.prices[current_tick - 1]:
-    #             while (current_tick <= self._end_tick and
-    #                    self.prices[current_tick] < self.prices[current_tick - 1]):
-    #                 current_tick += 1
-    #             position = Positions.Short
-    #         else:
-    #             while (current_tick <= self._end_tick and
-    #                    self.prices[current_tick] >= self.prices[current_tick - 1]):
-    #                 current_tick += 1
-    #             position = Positions.Long
-
-    #         if position == Positions.Long:
-    #             current_price = self.prices[current_tick - 1]
-    #             last_trade_price = self.prices[last_trade_tick]
-    #             shares = profit / last_trade_price
-    #             profit = shares * current_price
-    #         last_trade_tick = current_tick - 1
-
-    #     return profit
