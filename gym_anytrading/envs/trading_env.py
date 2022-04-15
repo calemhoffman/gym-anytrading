@@ -6,7 +6,8 @@ from enum import Enum
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-
+import pandas as pd
+from sklearn import preprocessing, model_selection, feature_selection, ensemble, linear_model, metrics, decomposition
 
 class Actions(Enum):
     Sell = 0

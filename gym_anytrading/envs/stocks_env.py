@@ -1,4 +1,6 @@
 import numpy as np
+from sklearn import preprocessing, model_selection, feature_selection, ensemble, linear_model, metrics, decomposition
+import pandas as pd
 
 from .trading_env import TradingEnv, Actions, Positions
 
@@ -19,13 +21,17 @@ class StocksEnv(TradingEnv):
         prices = self.df.loc[:, 'Close'].to_numpy()
 
         prices[self.frame_bound[0] - self.window_size]  # validate index (TODO: Improve validation)
-        prices = prices[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
+        prices = prices[self.frame_bound[0]-self.window_size:self.frame_bound[1]]        
+        diff = np.insert(np.diff(prices/100.), 0, 0)
 
-        diff = np.insert(np.diff(prices), 0, 0)
-        #signal_features = diff
+        #convert signal_features into normalized 0 - 1 data
+        
         signal_features = np.column_stack((prices, diff))
 
-        return prices, signal_features
+        min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0,1))
+        signal_features_norm = min_max_scaler.fit_transform(signal_features)
+
+        return prices, signal_features_norm
 
     #calculate the delta reward based on current action
     # and the next step
