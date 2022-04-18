@@ -55,6 +55,8 @@ class StocksEnv(TradingEnv):
             self._pocket  -= buy_cost
             if (price_diff >= 0.0):
                 stp_reward = 1.
+            else:
+                stp_reward = -1.
 
         if ((action == Actions.Sell.value and self._position == Positions.High)):
             trade = True
@@ -62,6 +64,8 @@ class StocksEnv(TradingEnv):
             self._pocket += buy_cost
             if (price_diff <= 0.0):
                 stp_reward = 1.
+            else:
+                stp_reward = -1.
             #need to calculate how much made / lost since last .Low
             #self._pocket = current_price - price at last buy
 
@@ -69,6 +73,8 @@ class StocksEnv(TradingEnv):
             trade = False
             if (price_diff >= 0.0):
                 stp_reward = 0.5
+            else:
+                stp_reward = -0.5
         
         #print(self._pocket)
         self._update_value(action)
