@@ -71,10 +71,10 @@ class StocksEnv(TradingEnv):
 
         if ((action == Actions.Hold.value)):
             trade = False
-            if (price_diff >= 0.0):
-                stp_reward = 0.5
-            else:
-                stp_reward = -0.5
+            if (price_diff >= 0.0 and self._position == Positions.High):
+                stp_reward = 0.25
+            if (self._position == Positions.Low):
+                stp_reward = -0.25
         
         #print(self._pocket)
         self._update_value(action)
